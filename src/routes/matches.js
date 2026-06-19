@@ -18,23 +18,18 @@ matchRouter.get('/', async (req, res) => {
   if (!parsed.success) {
     return res.status(400).json({
       error: 'Invalid Query',
-      details: JSON.stringify(parsed.error),
+      details: parsed.error.issues,
     });
   }
 
   const limit = Math.min(parsed.data.limit ?? 50, MAX_LIMIT);
 
-  console.log(limit);
-
   try {
-    console.log('HERE');
     const data = await db
       .select()
       .from(matches)
       .orderBy(desc(matches.createdAt))
       .limit(limit);
-
-    console.log('HERE2');
 
     res.status(200).json({ data });
   } catch (error) {
@@ -44,16 +39,17 @@ matchRouter.get('/', async (req, res) => {
 
 matchRouter.post('/', async (req, res) => {
   const parsed = createMatchSchema.safeParse(req.body);
-  const {
-    data: { startTime, endTime, homeScore, awayScore },
-  } = parsed;
 
   if (!parsed.success) {
     return res.status(400).json({
       error: 'Invalid Payload',
-      details: JSON.stringify(parsed.error),
+      details: parsed.error.issues,
     });
   }
+
+  const {
+    data: { startTime, endTime, homeScore, awayScore },
+  } = parsed;
 
   try {
     const [event] = await db
